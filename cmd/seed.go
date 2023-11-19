@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/UitsHabib/ecommerce-crud/config"
@@ -30,9 +29,9 @@ func seed(cmd *cobra.Command, args []string) error {
 	defer db.Close()
 
 	err = db.Ping()
-  if err != nil {
-    panic(err)
-  }
+	if err != nil {
+		panic(err)
+	}
 
 	log.Println("---------------Connected to database---------------")
 
@@ -42,17 +41,84 @@ func seed(cmd *cobra.Command, args []string) error {
 		log.Fatal("can not create table: ", err)
 	}
 
-	// initialize the brand repo
+	// initialize the repos
 	brandRepo := repo.NewBrandRepo(db)
+	ctgryRepo := repo.NewCategoryRepo(db)
+	spplrRepo := repo.NewSupplierRepo(db)
+	productRepo := repo.NewProductRepo(db)
 
+	// -------------------- brand --------------------
 	// create a new brand
 	newBrand := &service.Brand{Name: "Lenovo", StatusID: 1, CreatedAt: util.GetCurrentTimestamp()}
-	_, err = brandRepo.Add(context.Background(), newBrand)
+	brand, err := brandRepo.Add(context.Background(), newBrand)
 	if err != nil {
-		log.Fatal("can not create item: ", err)
+		log.Fatal("can not create brand: ", err)
 	}
 
-	fmt.Println("seed completed successfully")
+	// --------------------- category --------------------
+	// create a new category
+	newCategory := &service.Category{
+		Name:      "Laptop",
+		StatusID:  1,
+		CreatedAt: util.GetCurrentTimestamp(),
+	}
+	ctgry, err := ctgryRepo.Add(context.Background(), newCategory)
+	if err != nil {
+		log.Fatal("can not create category: ", err)
+	}
+
+	// --------------------- supplier --------------------
+	// create a new supplier
+	newSpplr := &service.Supplier{
+		Name:               "Z Studio",
+		Email:              "zstudio@gmail.com",
+		Phone:              "1234567895",
+		StatusID:           1,
+		IsVerifiedSupplier: true,
+		CreatedAt:          util.GetCurrentTimestamp(),
+	}
+	spplr, err := spplrRepo.Add(context.Background(), newSpplr)
+	if err != nil {
+		log.Fatal("can not create category: ", err)
+	}
+
+	createProducts(context.Background(), productRepo, brand.ID, ctgry.ID, spplr.ID)
+
+	log.Println("---------------seed completed successfully---------")
 
 	return nil
+}
+
+func createProducts(ctx context.Context, prdRepo service.ProductRepo, brandID, ctgryID, spplrID string) {
+	for i := 1; i <= 20; i++ {
+		addProduct(ctx, prdRepo, &service.Product{
+			Brand: service.Brand{
+				ID: brandID,
+			},
+			Category: service.Category{
+				ID: ctgryID,
+			},
+			Supplier: service.Supplier{
+				ID: spplrID,
+			},
+			ProductStock: service.ProductStock{
+				StockQuantity: util.RandomQuantity(),
+			},
+			Name:           util.RandomOwner(),
+			Description:    util.RandomString(20),
+			Specifications: util.RandomString(30),
+			UnitPrice:      float64(util.RandomMoney()),
+			DiscountPrice:  5,
+			Tags:           []string{"Laptop"},
+			StatusID:       1,
+			CreatedAt:      util.GetCurrentTimestamp(),
+		})
+	}
+}
+
+func addProduct(ctx context.Context, prdRepo service.ProductRepo, product *service.Product) {
+	_, err := prdRepo.Add(context.Background(), product)
+	if err != nil {
+		log.Fatal("can not create product: ", err)
+	}
 }
