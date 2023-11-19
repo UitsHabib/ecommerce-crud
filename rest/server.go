@@ -13,11 +13,9 @@ import (
 )
 
 type Server struct {
-	router     *gin.Engine
-	svc        service.Service
-	appCnf     *config.Application
-	region     string
-	userPoolID string
+	router *gin.Engine
+	svc    service.Service
+	appCnf *config.Application
 }
 
 func NewServer(svc service.Service, appCnf *config.Application) (*Server, error) {
@@ -63,6 +61,7 @@ func (server *Server) setupRouter() {
 	/////////////////// category routes //////////////////////
 	router.POST("/api/categories", server.createCategory)
 	router.GET("/api/categories", server.getCategories)
+	router.GET("/api//categories/tree", server.getFormattedCategories)
 	router.GET("/api/categories/:id", server.getCategory)
 	router.PUT("/api/categories/:id", server.updateCategory)
 	router.DELETE("/api/categories/:id", server.deleteCategory)
