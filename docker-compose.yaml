@@ -27,6 +27,10 @@ services:
       - DB_USER=root
       - DB_PASSWORD=admin
       - DB_NAME=ecommerce
+      - ENV=dev
+      - SERVER_ADDRESS=0.0.0.0:8080
+      - IS_LOGGING_TO_FILE=false
+      - LOG_FILE_PATH=/var/log/backend.log
     ports:
       - 5000:8080
     # volumes:
